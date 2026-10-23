@@ -55,4 +55,25 @@ You need to create the following secrets (not needed within the k8s-at-home org 
 Testing requires multiple containers - see the [gateway-admision-controller](../../../gateway-admision-controller)
 and check the [Makefile](Makefile) for other build targets.
 
+## DNSSEC trust anchors
+
+The image installs the public root trust anchors from
+[`dnsmasq/trust-anchors.conf`](dnsmasq/trust-anchors.conf). Keep this file aligned
+with [IANA's root key rollover schedule](https://www.iana.org/dnssec/files).
+After the October 11, 2026 rollover, an image trusting only key 20326 returns
+DNSSEC validation failures; key 38696 is also required. DNSSEC stays enabled.
+
+For the v1.8.2 deployment, `Dockerfile.dnssec-hotfix` updates only this file on
+the exact deployed image, preserving its gateway scripts and packages:
+
+```bash
+docker build -f Dockerfile.dnssec-hotfix \
+  --build-arg IMAGE_REVISION="$(git rev-parse HEAD)" \
+  -t jgilfoil/pod-gateway:v1.8.2-dnssec2026 .
+docker run --rm -i --entrypoint sh jgilfoil/pod-gateway:v1.8.2-dnssec2026 < tests/dnssec.sh
+```
+
+The test uses public DNS to verify that a signed domain resolves with validated
+data and that a deliberately invalid signature is still rejected.
+
 

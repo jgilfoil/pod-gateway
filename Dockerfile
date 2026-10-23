@@ -10,6 +10,9 @@ WORKDIR /
 # inotify-tools -> inotifyd for dnsmask resolv.conf reload circumvention
 RUN apk add --no-cache coreutils dnsmasq-dnssec iproute2 bind-tools dhclient bash inotify-tools ip6tables
 
+# Package-provided anchors can lag behind IANA root key rollovers.
+COPY dnsmasq/trust-anchors.conf /usr/share/dnsmasq/trust-anchors.conf
+
 COPY config /default_config
 COPY config /config
 COPY bin /bin
